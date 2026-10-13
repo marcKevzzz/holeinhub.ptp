@@ -554,6 +554,7 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
           <div ref={mediaRef} className={`news-modal-media ${story.poster ? 'promotion-media' : ''}`}>
             {story.video ? (
               <video controls autoPlay muted playsInline preload="auto" poster={mediaImages[story.image]?.src || story.image} aria-label={story.title}>
+                <source src={story.video.replace(/\.mp4$/, '.webm')} type="video/webm" />
                 <source src={story.video} type="video/mp4" />
                 <a href={story.video}>Watch {story.title}</a>
               </video>

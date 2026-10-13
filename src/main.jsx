@@ -162,6 +162,9 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
   const [loaded, setLoaded] = useState(eager);
   const playRequested = useRef(false);
 
+  const srcWebm = src ? src.replace(/\.mp4$/, '.webm') : null;
+  const mobileSrcWebm = mobileSrc ? mobileSrc.replace(/\.mp4$/, '.webm') : null;
+
   useEffect(() => {
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
     const applyPreference = () => {
@@ -222,7 +225,9 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
       {!failed && <video ref={videoRef} className={`${className} background-video`} muted loop playsInline preload={loaded ? 'metadata' : 'none'} aria-hidden="true"
         onPlay={() => setPaused(false)} onPause={() => setPaused(true)} onError={event => { if (event.currentTarget.error) setFailed(true); }}>
         {loaded && <>
+          {mobileSrcWebm && <source src={mobileSrcWebm} media="(max-width: 700px)" type="video/webm" />}
           {mobileSrc && <source src={mobileSrc} media="(max-width: 700px)" type="video/mp4" />}
+          {srcWebm && <source src={srcWebm} type="video/webm" />}
           <source src={src} type="video/mp4" />
         </>}
       </video>}
@@ -335,45 +340,37 @@ function Home() {
 
 const heritageMilestones = [
   {
-    "year": "PLAY",
-    "title": "INDOOR GOLF, GOOD COMPANY",
-    "copy": "Practice in the simulator bays, bring the family, or take time between swings at the tables beside the turf.",
-    "image": "/media/facebook/family-play.png",
-    "aspect": "portrait",
-    "poster": false
+    chapter: "CHAPTER 01 / SIMULATOR SUITES",
+    year: "01",
+    title: "TOUR-GRADE PRECISION",
+    copy: "High-speed optical tracking, realistic turf greens, and responsive physics bring world-class fairways indoors. Play solo practice rounds or dial in every club in your bag.",
+    image: "/media/facebook/venue-overview.png",
+    aspect: "landscape",
   },
   {
-    "year": "PRO",
-    "title": "GET COACHED BY THE PROS",
-    "copy": "The supplied coaching poster lists Philippine coaching at PHP 2,000 per hour and an eight-session KPGA package at PHP 15,000. Ask the venue about schedules and availability.",
-    "image": "/media/facebook/coaching-programs.png",
-    "aspect": "portrait",
-    "poster": true
+    chapter: "CHAPTER 02 / SOCIAL SPACES",
+    year: "02",
+    title: "ROOM TO UNWIND",
+    copy: "Take time between swings. Dedicated lounge tables, comfortable seating, and casual dining provide space for conversations and camaraderie beyond the scorecard.",
+    image: "/media/facebook/social-seating.png",
+    aspect: "portrait",
   },
   {
-    "year": "JR",
-    "title": "JUNIOR GOLF PROGRAM",
-    "copy": "The third junior program poster lists Saturday sessions, four lessons over one month, and PHP 2,500 per participant. Its recruitment deadline is October 2; contact the venue for the next intake.",
-    "image": "/media/facebook/junior-golf-third.png",
-    "aspect": "portrait",
-    "poster": true
+    chapter: "CHAPTER 03 / COACHING & CLINICS",
+    year: "03",
+    title: "DEVELOP YOUR GAME",
+    copy: "From fundamental grip and posture to comprehensive swing analysis, personalized instruction helps beginners find confidence and seasoned players shave strokes.",
+    image: "/media/facebook/coaching.png",
+    aspect: "portrait",
   },
   {
-    "year": "KPGA",
-    "title": "SMALL-GROUP LESSONS",
-    "copy": "The supplied KPGA lesson poster describes four Tuesday classes, up to eight participants, and PHP 2,500. Registration was listed until September 18; ask about upcoming sessions.",
-    "image": "/media/facebook/kpga-lessons.png",
-    "aspect": "portrait",
-    "poster": true
+    chapter: "CHAPTER 04 / GATHERINGS & EVENTS",
+    year: "04",
+    title: "A ROUND FOR EVERYONE",
+    copy: "Indoor golf built for friends, families, and team gatherings. Multi-bay reservations and casual formats turn every session into an accessible, memorable social event.",
+    image: "/media/facebook/family-play.png",
+    aspect: "portrait",
   },
-  {
-    "year": "OCT",
-    "title": "DAYTIME PLAY & CHALLENGES",
-    "copy": "The October daytime poster lists PHP 400 before 4 PM, excluding weekends and holidays. The longest-drive challenge invites players to ask staff to record and verify a drive. Confirm which offers are available.",
-    "image": "/media/facebook/october-daytime-promo.png",
-    "aspect": "portrait",
-    "poster": true
-  }
 ];
 
 function About() {
@@ -385,44 +382,40 @@ function About() {
       <div className="heritage-horizontal-container" ref={containerRef}>
         <div ref={trackRef} className="heritage-scroll-track">
           {heritageMilestones.map((item, idx) => (
-            <React.Fragment key={idx}>
+            <section className="heritage-milestone-group" key={idx} aria-label={item.title}>
               {/* Text Block: Title + Body on top, Huge Year anchored at bottom */}
               <div className="heritage-block-frame heritage-text-frame">
                 <div className="heritage-text-content">
+                  <span className="heritage-chapter-tag">{item.chapter}</span>
                   <h3 className="heritage-milestone-title"><WordStagger>{item.title}</WordStagger></h3>
                   <p className="heritage-milestone-copy">{item.copy}</p>
                 </div>
                 <strong className="heritage-giant-year">{item.year}</strong>
               </div>
 
-              {/* Spacer Block matching Spyker 160px spacing */}
-              <div className="heritage-spacer" aria-hidden="true" />
-
               {/* Archival Image Frame matching Spyker aspect-480/674 & landscape */}
-              <div className={`heritage-block-frame heritage-image-frame ${item.aspect === 'landscape' ? 'aspect-landscape' : 'aspect-portrait'} ${item.poster ? 'heritage-poster-frame' : ''}`}>
+              <div className={`heritage-block-frame heritage-image-frame ${item.aspect === 'landscape' ? 'aspect-landscape' : 'aspect-portrait'}`}>
                 <div className="heritage-image-inner">
                   <Photo src={item.image} alt={item.title} className="heritage-parallax-img" />
                 </div>
               </div>
-
-              {/* Spacer Block */}
-              <div className="heritage-spacer" aria-hidden="true" />
-            </React.Fragment>
+            </section>
           ))}
 
           {/* Final CTA Block at end of track */}
           <div className="heritage-block-frame heritage-text-frame heritage-end-frame">
             <div className="heritage-text-content">
+              <span className="heritage-chapter-tag">RESERVATIONS &amp; PLAY</span>
               <h3 className="heritage-milestone-title"><WordStagger>YOUR ROUND STARTS HERE</WordStagger></h3>
               <p className="heritage-milestone-copy">Step onto the turf and into your next round. Explore indoor golf, coaching, and social spaces in Quezon City.</p>
             </div>
-            <strong className="heritage-giant-year">PLAY</strong>
             <div className="heritage-cta-action">
               <Button as={Link} className="button" to="/appointment">
                 <ButtonLabel>MAKE A RESERVATION</ButtonLabel>
                 <Arrow />
               </Button>
             </div>
+            <strong className="heritage-giant-year" aria-hidden="true">PLAY</strong>
           </div>
 
           <div className="heritage-spacer" aria-hidden="true" />
@@ -653,7 +646,6 @@ function App() {
 
   return (
     <>
-      <a className="skip" href="#main">Skip to content</a>
       <Header />
       <RouteTransition />
       <div className="smooth-wrapper">

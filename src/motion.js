@@ -111,9 +111,9 @@ export function animatePage(root) {
             yPercent: 110,
             opacity: 0,
             duration: 0.85,
-            stagger: 0.035,
+            stagger: 0.05,
             ease: 'power3.out',
-            delay: entrance ? 0.18 : 0,
+            delay: entrance ? 0.18 : 0.05,
             ...(entrance ? {} : {
               scrollTrigger: {
                 trigger: element,
@@ -129,7 +129,7 @@ export function animatePage(root) {
             opacity: 0,
             duration: 0.85,
             ease: 'power3.out',
-            delay: entrance ? 0.18 : 0,
+            delay: entrance ? 0.18 : 0.05,
             ...(entrance ? {} : {
               scrollTrigger: {
                 trigger: element,
@@ -142,7 +142,7 @@ export function animatePage(root) {
         }
       };
 
-      root.querySelectorAll('.intro h2,.statement h2,.about-teaser h2,.final-cta h2,.contact-gallery h2')
+      root.querySelectorAll('.intro h2,.statement h2,.venue-promotions h2,.about-teaser h2,.final-cta h2,.contact-gallery h2')
         .forEach(element => revealHeading(element));
 
       if (hero) {
@@ -277,6 +277,86 @@ export function animatePage(root) {
         });
       }
 
+      // Venue promotions: animate images similar to gallery images, with stagger
+      const venuePromos = root.querySelector('.venue-promotions');
+      const promoGrid = root.querySelector('.promotion-grid');
+      if (venuePromos && promoGrid) {
+        const headerItems = venuePromos.querySelectorAll('.eyebrow, .promotion-note');
+        if (headerItems.length) {
+          gsap.from(headerItems, {
+            y: 20,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: venuePromos,
+              start: 'top 85%',
+              once: true,
+            }
+          });
+        }
+
+        const figures = Array.from(promoGrid.querySelectorAll('figure'));
+        if (figures.length) {
+          // Staggered entrance matching gallery image animation (from scale: 0.82, opacity: 0 to scale: 1, opacity: 1)
+          gsap.fromTo(figures,
+            { scale: 0.72, opacity: 0 },
+            {
+              scale: 1,
+              opacity: 1,
+              duration: 0.9,
+              stagger: 0.16,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: promoGrid,
+                start: 'top 88%',
+                once: true,
+              }
+            }
+          );
+
+          // Staggered captions matching gallery info
+          const captions = Array.from(promoGrid.querySelectorAll('figcaption'));
+          if (captions.length) {
+            gsap.from(captions, {
+              y: 18,
+              opacity: 0,
+              duration: 0.85,
+              stagger: 0.16,
+              delay: 0.12,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: promoGrid,
+                start: 'top 88%',
+                once: true,
+              }
+            });
+          }
+
+          // Subtle parallax on the images inside matching gallery
+          figures.forEach((fig) => {
+            const img = fig.querySelector('img');
+            if (img) {
+              gsap.fromTo(img,
+                { yPercent: -3, scale: 1.05 },
+                {
+                  yPercent: 3,
+                  scale: 1.01,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: fig,
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: 0.25,
+                  }
+                }
+              );
+            }
+          });
+        }
+      }
+
       // Heritage Mosaic Teaser on Home page (matching Spyker Cars floating scattered images, crisp edges)
       const mosaic = root.querySelector('.about-teaser-mosaic');
       if (mosaic) {
@@ -394,37 +474,53 @@ export function animatePage(root) {
           const totalDistance = heritageTrack.scrollWidth - window.innerWidth;
           const enterTravelProgress = Math.min(0.26, Math.max(0.12, (window.innerWidth * 0.52) / totalDistance));
 
+          const getFrameLeft = (frame) => {
+            const trackRect = heritageTrack.getBoundingClientRect();
+            const frameRect = frame.getBoundingClientRect();
+            return frameRect.left - trackRect.left;
+          };
+
           textFrames.forEach((frame, idx) => {
             if (frame.classList.contains('heritage-end-frame')) return;
-            const isInitial = frame.offsetLeft < window.innerWidth * 0.75;
+            const frameLeft = getFrameLeft(frame);
+            const isInitial = frameLeft < window.innerWidth * 0.75;
             const words = frame.querySelectorAll('.split-word');
+            const tag = frame.querySelector('.heritage-chapter-tag');
             const title = frame.querySelector('.heritage-milestone-title');
             const copy = frame.querySelector('.heritage-milestone-copy');
             const year = frame.querySelector('.heritage-giant-year');
 
             if (isInitial) {
               const loadDelay = 0.12 + idx * 0.18;
+              if (tag) gsap.from(tag, { y: 15, opacity: 0, duration: 0.65, ease: 'power3.out', delay: loadDelay });
               if (words.length) {
-                gsap.from(words, { yPercent: 110, opacity: 0, duration: 0.85, stagger: 0.03, ease: 'power3.out', delay: loadDelay });
+                gsap.from(words, { yPercent: 110, opacity: 0, duration: 0.85, stagger: 0.03, ease: 'power3.out', delay: loadDelay + 0.05 });
               } else if (title) {
-                gsap.from(title, { y: 35, opacity: 0, duration: 0.85, ease: 'power3.out', delay: loadDelay });
+                gsap.from(title, { y: 35, opacity: 0, duration: 0.85, ease: 'power3.out', delay: loadDelay + 0.05 });
               }
               if (copy) gsap.from(copy, { y: 25, opacity: 0, duration: 0.85, ease: 'power3.out', delay: loadDelay + 0.1 });
               if (year) gsap.from(year, { scale: 0.88, opacity: 0, duration: 0.95, ease: 'power3.out', delay: loadDelay + 0.15 });
             } else if (totalDistance > 0) {
-              const enterTime = Math.max(0, Math.min(0.96, (frame.offsetLeft - window.innerWidth * 0.98) / totalDistance));
+              const enterTime = Math.max(0, Math.min(0.96, (frameLeft - window.innerWidth * 0.98) / totalDistance));
 
+              if (tag) {
+                horizontalTl.fromTo(tag,
+                  { y: 15, opacity: 0 },
+                  { y: 0, opacity: 1, ease: 'sine.inOut', duration: enterTravelProgress },
+                  enterTime
+                );
+              }
               if (words.length) {
                 horizontalTl.fromTo(words,
                   { yPercent: 90, opacity: 0 },
                   { yPercent: 0, opacity: 1, stagger: 0.012, ease: 'sine.inOut', duration: enterTravelProgress },
-                  enterTime
+                  enterTime + 0.005
                 );
               } else if (title) {
                 horizontalTl.fromTo(title,
                   { y: 30, opacity: 0 },
                   { y: 0, opacity: 1, ease: 'sine.inOut', duration: enterTravelProgress },
-                  enterTime
+                  enterTime + 0.005
                 );
               }
               if (copy) {
@@ -445,10 +541,11 @@ export function animatePage(root) {
           });
 
           imageFrames.forEach((frame, idx) => {
-            const isInitial = frame.offsetLeft < window.innerWidth * 0.75;
+            const frameLeft = getFrameLeft(frame);
+            const isInitial = frameLeft < window.innerWidth * 0.75;
             const img = frame.querySelector('.heritage-parallax-img');
-            const parallaxStart = Math.max(0, (frame.offsetLeft - window.innerWidth) / totalDistance);
-            const parallaxEnd = Math.min(1, (frame.offsetLeft + frame.offsetWidth) / totalDistance);
+            const parallaxStart = Math.max(0, (frameLeft - window.innerWidth) / totalDistance);
+            const parallaxEnd = Math.min(1, (frameLeft + frame.offsetWidth) / totalDistance);
             const parallaxDuration = Math.max(0.08, parallaxEnd - parallaxStart);
 
             // Counter-parallax on image frame
@@ -473,7 +570,7 @@ export function animatePage(root) {
                 }
               );
             } else if (totalDistance > 0) {
-              const enterTime = Math.max(0, Math.min(0.96, (frame.offsetLeft - window.innerWidth * 0.98) / totalDistance));
+              const enterTime = Math.max(0, Math.min(0.96, (frameLeft - window.innerWidth * 0.98) / totalDistance));
 
               horizontalTl.fromTo(frame,
                 { scale: 0.62, opacity: 0 },
@@ -492,8 +589,9 @@ export function animatePage(root) {
           // End CTA frame at end of track
           const endFrame = heritageTrack.querySelector('.heritage-end-frame');
           if (endFrame && totalDistance > 0) {
-            const enterTime = Math.max(0, Math.min(0.96, (endFrame.offsetLeft - window.innerWidth * 0.98) / totalDistance));
-            horizontalTl.fromTo(endFrame.querySelectorAll('.heritage-milestone-title, .heritage-milestone-copy, .heritage-giant-year, .button'),
+            const frameLeft = getFrameLeft(endFrame);
+            const enterTime = Math.max(0, Math.min(0.96, (frameLeft - window.innerWidth * 0.98) / totalDistance));
+            horizontalTl.fromTo(endFrame.querySelectorAll('.heritage-chapter-tag, .heritage-milestone-title, .heritage-milestone-copy, .heritage-giant-year, .button'),
               { y: 30, opacity: 0 },
               { y: 0, opacity: 1, stagger: 0.015, ease: 'sine.inOut', duration: enterTravelProgress },
               enterTime
@@ -956,7 +1054,7 @@ export function animatePage(root) {
     try {
       ScrollTrigger.getAll().forEach(st => {
         if (st.trigger && (root.contains(st.trigger) || st.trigger === root || st.vars?.pin)) {
-          st.kill(true);
+          st.kill(false);
         }
       });
     } catch {}

@@ -77,12 +77,6 @@
     "small": "/media/facebook/golf-experience-poster-small.webp",
     "smallWidth": 360
   },
-  "/media/facebook/hero-poster.jpg": {
-    "src": "/media/facebook/hero-poster.webp",
-    "width": 720,
-    "small": "/media/facebook/hero-poster-small.webp",
-    "smallWidth": 360
-  },
   "/media/facebook/venue-tour-poster.jpg": {
     "src": "/media/facebook/venue-tour-poster.webp",
     "width": 720,
@@ -101,18 +95,6 @@
     "small": "/media/brand/wordmark-hq-small.webp",
     "smallWidth": 480
   },
-  "/media/facebook/desserts-optimized-poster.jpg": {
-    "src": "/media/facebook/desserts-optimized-poster.webp",
-    "width": 720,
-    "small": "/media/facebook/desserts-optimized-poster-small.webp",
-    "smallWidth": 360
-  },
-  "/media/facebook/golf-optimized-poster.jpg": {
-    "src": "/media/facebook/golf-optimized-poster.webp",
-    "width": 720,
-    "small": "/media/facebook/golf-optimized-poster-small.webp",
-    "smallWidth": 360
-  },
   "/media/facebook/hero-optimized-poster.jpg": {
     "src": "/media/facebook/hero-optimized-poster.webp",
     "width": 900,
@@ -123,12 +105,6 @@
     "src": "/media/facebook/statement-optimized-poster.webp",
     "width": 900,
     "small": "/media/facebook/statement-optimized-poster-small.webp",
-    "smallWidth": 360
-  },
-  "/media/facebook/tour-optimized-poster.jpg": {
-    "src": "/media/facebook/tour-optimized-poster.webp",
-    "width": 900,
-    "small": "/media/facebook/tour-optimized-poster-small.webp",
     "smallWidth": 360
   }
 }
