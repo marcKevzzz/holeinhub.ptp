@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Photo, WordStagger } from './ui';
+import mediaImages from './media-images.json';
 
 const newsItems = [
   {
@@ -552,7 +553,7 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
           </button>
           <div ref={mediaRef} className={`news-modal-media ${story.poster ? 'promotion-media' : ''}`}>
             {story.video ? (
-              <video controls muted playsInline preload="metadata" poster={story.image} aria-label={story.title}>
+              <video controls autoPlay muted playsInline preload="auto" poster={mediaImages[story.image]?.src || story.image} aria-label={story.title}>
                 <source src={story.video} type="video/mp4" />
                 <a href={story.video}>Watch {story.title}</a>
               </video>

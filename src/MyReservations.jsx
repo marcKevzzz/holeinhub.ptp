@@ -94,7 +94,7 @@ export default function MyReservations() {
       <section className="history">
         {filtered.length === 0 ? (
           <div className="empty">
-            <img className="empty-mascot" src="/media/brand/mascot-hq.png" alt="" width="1280" height="1280" />
+            <img className="empty-mascot" src="/media/brand/mascot-hq.webp" alt="" width="1280" height="1280" />
             <h3>No reservations found.</h3>
             <p>We could not find any active bookings matching your search query.</p>
             <div style={{ marginTop: '24px' }}>

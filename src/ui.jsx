@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { initButtonMotion } from './motion';
+import mediaImages from './media-images.json';
 
 export const Arrow = () => (
   <span className="button-icon" data-button-icon="true" aria-hidden="true">
@@ -16,11 +17,16 @@ export const LeftArrow = () => (
 );
 
 export function Photo({className='',src='/media/facebook/venue-overview.png',alt='Hole In Hub simulator bays and seating',eager=false}) {
-  return <img className={className} src={src} alt={alt} loading={eager?'eager':'lazy'} decoding="async" onError={e=>{if(!e.currentTarget.src.endsWith('/media/facebook/venue-overview.png'))e.currentTarget.src='/media/facebook/venue-overview.png';}}/>;
+  const image = mediaImages[src];
+  const fallback = mediaImages['/media/facebook/venue-overview.png'].src;
+  return <img className={className} src={image?.src || src}
+    srcSet={image && image.smallWidth < image.width ? `${image.small} ${image.smallWidth}w, ${image.src} ${image.width}w` : undefined}
+    sizes="(max-width: 700px) 100vw, 60vw" alt={alt} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async"
+    onError={event => { if (!event.currentTarget.src.endsWith(fallback)) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = fallback; } }} />;
 }
 
 export function Mark() {
-  return <span className="mark"><img src="/media/brand/wordmark-hq.png" alt="Hole In Hub Golf" width="2172" height="724" /></span>;
+  return <span className="mark"><img src="/media/brand/wordmark-hq.webp" alt="Hole In Hub Golf" width="2172" height="724" /></span>;
 }
 
 export function WordStagger({ children }) {

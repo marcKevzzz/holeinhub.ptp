@@ -20,11 +20,11 @@ function Footer() {
 
   const primaryNav = [
     { to: '/', label: 'Home' },
-    { to: '/appointment', label: 'Simulator Bays' },
-    { to: '/about', label: 'Heritage' },
+    { to: '/about', label: 'About' },
     { to: '/gallery', label: 'Gallery' },
-    { to: '/my-reservations', label: 'My Reservations' },
-    { to: '/contacts', label: 'Contact' },
+    { to: '/appointment', label: 'Make a reservation' },
+    { to: '/my-reservations', label: 'My reservations' },
+    { to: '/contacts', label: 'Contacts' },
   ];
 
   return (
@@ -155,10 +155,12 @@ function HeritageMosaicTeaser() {
   );
 }
 
-function BackgroundVideo({ src, poster, className, alt, eager = false, playAction = false }) {
+function BackgroundVideo({ src, poster, className, alt, eager = false, playAction = false, mobileSrc }) {
   const videoRef = useRef(null);
   const [failed, setFailed] = useState(false);
   const [paused, setPaused] = useState(true);
+  const [loaded, setLoaded] = useState(eager);
+  const playRequested = useRef(false);
 
   useEffect(() => {
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -166,9 +168,26 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
       if (preference.matches) videoRef.current?.pause();
       else if (!playAction) videoRef.current?.play().catch(() => {});
     };
-    applyPreference();
+    if (loaded) {
+      videoRef.current?.load();
+      if (playRequested.current) videoRef.current?.play().catch(() => {});
+      else applyPreference();
+    }
     preference.addEventListener('change', applyPreference);
     return () => preference.removeEventListener('change', applyPreference);
+  }, [playAction, loaded]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setLoaded(true);
+        if (!playAction && !matchMedia('(prefers-reduced-motion: reduce)').matches) video.play().catch(() => {});
+      } else video.pause();
+    }, { rootMargin: '200px' });
+    observer.observe(video);
+    return () => observer.disconnect();
   }, [playAction]);
 
   useEffect(() => {
@@ -200,13 +219,19 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
   return (
     <>
       <Photo eager={eager} src={poster} alt={alt} className={className} />
-      {!failed && <video ref={videoRef} className={`${className} background-video`} muted loop playsInline preload="metadata" aria-hidden="true"
-        onLoadedMetadata={event => { if (playAction) event.currentTarget.currentTime = event.currentTarget.duration / 2; }}
-        onPlay={() => setPaused(false)} onPause={() => setPaused(true)} onError={() => setFailed(true)}>
-        <source src={src} type="video/mp4" />
+      {!failed && <video ref={videoRef} className={`${className} background-video`} muted loop playsInline preload={loaded ? 'metadata' : 'none'} aria-hidden="true"
+        onPlay={() => setPaused(false)} onPause={() => setPaused(true)} onError={event => { if (event.currentTarget.error) setFailed(true); }}>
+        {loaded && <>
+          {mobileSrc && <source src={mobileSrc} media="(max-width: 700px)" type="video/mp4" />}
+          <source src={src} type="video/mp4" />
+        </>}
       </video>}
       {playAction && !failed && <button className="statement-play" type="button" aria-label={paused ? 'Play statement video' : 'Pause statement video'} onClick={() => {
-        if (paused) videoRef.current?.play().catch(() => {});
+        if (paused) {
+          playRequested.current = true;
+          if (!loaded) setLoaded(true);
+          else videoRef.current?.play().catch(() => {});
+        }
         else videoRef.current?.pause();
       }}>
         <span aria-hidden="true">{paused ? '▶' : 'Ⅱ'}</span>
@@ -219,7 +244,7 @@ function Home() {
   return (
     <>
       <section className="hero">
-        <BackgroundVideo eager src="/media/facebook/hero-loop-hd.mp4" poster="/media/facebook/hero-poster.jpg" className="hero-image" alt="Inside Hole In Hub" />
+        <BackgroundVideo eager src="/media/facebook/hero-quality.mp4" mobileSrc="/media/facebook/hero-quality-mobile.mp4" poster="/media/facebook/hero-optimized-poster.jpg" className="hero-image" alt="Inside Hole In Hub" />
         <div className="hero-shade" />
         <div className="hero-content">
           <p className="eyebrow">A NEW WAY TO PLAY</p>
@@ -274,7 +299,7 @@ function Home() {
         </h2>
         <p>A shared experience. From the first swing to the last conversation.</p>
         <div className="photo-frame scroll-scale-frame">
-          <BackgroundVideo playAction src="/media/facebook/statement-loop-hd.mp4" poster="/media/facebook/venue-tour-poster.jpg" className="scroll-scale-img" alt="Friends spending time together at Hole In Hub" />
+          <BackgroundVideo playAction src="/media/facebook/statement-quality.mp4" mobileSrc="/media/facebook/statement-quality-mobile.mp4" poster="/media/facebook/statement-optimized-poster.jpg" className="scroll-scale-img" alt="Friends spending time together at Hole In Hub" />
         </div>
       </section>
 

@@ -1,0 +1,134 @@
+{
+  "/media/facebook/coaching-programs.png": {
+    "src": "/media/facebook/coaching-programs.webp",
+    "width": 526,
+    "small": "/media/facebook/coaching-programs-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/coaching.png": {
+    "src": "/media/facebook/coaching.webp",
+    "width": 1200,
+    "small": "/media/facebook/coaching-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/dessert-menu.png": {
+    "src": "/media/facebook/dessert-menu.webp",
+    "width": 516,
+    "small": "/media/facebook/dessert-menu-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/family-play.png": {
+    "src": "/media/facebook/family-play.webp",
+    "width": 1200,
+    "small": "/media/facebook/family-play-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/junior-golf-second.png": {
+    "src": "/media/facebook/junior-golf-second.webp",
+    "width": 526,
+    "small": "/media/facebook/junior-golf-second-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/junior-golf-third.png": {
+    "src": "/media/facebook/junior-golf-third.webp",
+    "width": 526,
+    "small": "/media/facebook/junior-golf-third-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/kpga-lessons.png": {
+    "src": "/media/facebook/kpga-lessons.webp",
+    "width": 526,
+    "small": "/media/facebook/kpga-lessons-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/october-daytime-promo.png": {
+    "src": "/media/facebook/october-daytime-promo.webp",
+    "width": 526,
+    "small": "/media/facebook/october-daytime-promo-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/october-longest-drive.png": {
+    "src": "/media/facebook/october-longest-drive.webp",
+    "width": 526,
+    "small": "/media/facebook/october-longest-drive-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/social-seating.png": {
+    "src": "/media/facebook/social-seating.webp",
+    "width": 1200,
+    "small": "/media/facebook/social-seating-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/venue-overview.png": {
+    "src": "/media/facebook/venue-overview.webp",
+    "width": 1200,
+    "small": "/media/facebook/venue-overview-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/golf-and-desserts-poster.jpg": {
+    "src": "/media/facebook/golf-and-desserts-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/golf-and-desserts-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/golf-experience-poster.jpg": {
+    "src": "/media/facebook/golf-experience-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/golf-experience-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/hero-poster.jpg": {
+    "src": "/media/facebook/hero-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/hero-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/venue-tour-poster.jpg": {
+    "src": "/media/facebook/venue-tour-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/venue-tour-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/brand/mascot-hq.png": {
+    "src": "/media/brand/mascot-hq.webp",
+    "width": 1200,
+    "small": "/media/brand/mascot-hq-small.webp",
+    "smallWidth": 480
+  },
+  "/media/brand/wordmark-hq.png": {
+    "src": "/media/brand/wordmark-hq.webp",
+    "width": 1200,
+    "small": "/media/brand/wordmark-hq-small.webp",
+    "smallWidth": 480
+  },
+  "/media/facebook/desserts-optimized-poster.jpg": {
+    "src": "/media/facebook/desserts-optimized-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/desserts-optimized-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/golf-optimized-poster.jpg": {
+    "src": "/media/facebook/golf-optimized-poster.webp",
+    "width": 720,
+    "small": "/media/facebook/golf-optimized-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/hero-optimized-poster.jpg": {
+    "src": "/media/facebook/hero-optimized-poster.webp",
+    "width": 900,
+    "small": "/media/facebook/hero-optimized-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/statement-optimized-poster.jpg": {
+    "src": "/media/facebook/statement-optimized-poster.webp",
+    "width": 900,
+    "small": "/media/facebook/statement-optimized-poster-small.webp",
+    "smallWidth": 360
+  },
+  "/media/facebook/tour-optimized-poster.jpg": {
+    "src": "/media/facebook/tour-optimized-poster.webp",
+    "width": 900,
+    "small": "/media/facebook/tour-optimized-poster-small.webp",
+    "smallWidth": 360
+  }
+}
