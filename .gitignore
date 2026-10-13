@@ -1,0 +1,8 @@
+node_modules/
+dist/
+source-notes/
+*.log
+screenshots/
+public/media/facebook/sources.json
+public/media/facebook/*-sample-*.jpg
+public/media/facebook/video-contact-sheet.jpg

@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T09:39:50.836385Z",
+  "title": "Design System: Hole In Hub Golf & Lounge",
+  "extensions": {
+    "motion": [
+      {
+        "value": "cubic-bezier(.22,1,.36,1)",
+        "purpose": "CSS arrow and image transitions.",
+        "name": "ease"
+      },
+      {
+        "value": "0.65s power3.inOut",
+        "purpose": "Estimated reference rhythm.",
+        "name": "menu"
+      },
+      {
+        "value": "1.1s power3.out",
+        "purpose": "Still-image entrance.",
+        "name": "hero"
+      },
+      {
+        "value": "0.8s power2.out",
+        "purpose": "Editorial reveals.",
+        "name": "reveal"
+      },
+      {
+        "value": "disabled",
+        "purpose": "Removes GSAP animation and CSS transitions.",
+        "name": "reduced-motion"
+      }
+    ],
+    "shadows": [
+      {
+        "value": "0 4px 25px #0000000d",
+        "purpose": "Separates fixed chapter controls.",
+        "name": "chapter-navigation"
+      }
+    ],
+    "breakpoints": [
+      {
+        "value": "700px",
+        "name": "mobile-max"
+      },
+      {
+        "value": "1000px",
+        "name": "compact-max"
+      },
+      {
+        "value": "1600px",
+        "name": "wide-min"
+      }
+    ],
+    "colorMeta": {
+      "muted": {
+        "role": "neutral",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "Muted Olive Gray",
+        "tonalRamp": [
+          "oklch(15% 0.01 125)",
+          "oklch(26% 0.01 125)",
+          "oklch(38% 0.01 125)",
+          "oklch(49% 0.01 125)",
+          "oklch(61% 0.01 125)",
+          "oklch(72% 0.01 125)",
+          "oklch(84% 0.01 125)",
+          "oklch(95% 0.01 125)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "Near-black Ink",
+        "tonalRamp": [
+          "oklch(15% 0.01 125)",
+          "oklch(26% 0.01 125)",
+          "oklch(38% 0.01 125)",
+          "oklch(49% 0.01 125)",
+          "oklch(61% 0.01 125)",
+          "oklch(72% 0.01 125)",
+          "oklch(84% 0.01 125)",
+          "oklch(95% 0.01 125)"
+        ]
+      },
+      "green": {
+        "role": "primary",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "Golf Green",
+        "tonalRamp": [
+          "oklch(15% 0.035 145)",
+          "oklch(26% 0.035 145)",
+          "oklch(38% 0.035 145)",
+          "oklch(49% 0.035 145)",
+          "oklch(61% 0.035 145)",
+          "oklch(72% 0.035 145)",
+          "oklch(84% 0.035 145)",
+          "oklch(95% 0.035 145)"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "Validation Red",
+        "tonalRamp": [
+          "oklch(15% 0.13 29)",
+          "oklch(26% 0.13 29)",
+          "oklch(38% 0.13 29)",
+          "oklch(49% 0.13 29)",
+          "oklch(61% 0.13 29)",
+          "oklch(72% 0.13 29)",
+          "oklch(84% 0.13 29)",
+          "oklch(95% 0.13 29)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "White Paper",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "rampNote": "Synthesized panel visualization; not implementation palette tokens.",
+        "displayName": "Pale Gray Line",
+        "tonalRamp": [
+          "oklch(15% 0.01 125)",
+          "oklch(26% 0.01 125)",
+          "oklch(38% 0.01 125)",
+          "oklch(49% 0.01 125)",
+          "oklch(61% 0.01 125)",
+          "oklch(72% 0.01 125)",
+          "oklch(84% 0.01 125)",
+          "oklch(95% 0.01 125)"
+        ]
+      }
+    }
+  },
+  "components": [
+    {
+      "description": "Primary rectangular action.",
+      "name": "Primary Button",
+      "kind": "button",
+      "html": "<button class=\"ds-button\">RESERVE NOW →</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:space-between;gap:40px;min-height:44px;min-width:230px;padding:12px 20px;background:var(--ink,#10110f);color:var(--paper,#fff);font-family:var(--display,Oswald),sans-serif;font-size:14px;letter-spacing:.84px;line-height:1.3;border:1px solid var(--ink,#10110f);border-radius:0;cursor:pointer;transition:background .25s,color .25s}.ds-button:hover{background:var(--green,#354f3b);border-color:var(--green,#354f3b)}.ds-button:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}",
+      "refersTo": "button-primary"
+    },
+    {
+      "description": "Action on photographic surfaces.",
+      "name": "White Button",
+      "kind": "button",
+      "html": "<button class=\"ds-button ds-white\">EXPLORE</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:space-between;gap:40px;min-height:44px;min-width:230px;padding:12px 20px;background:var(--ink,#10110f);color:var(--paper,#fff);font-family:var(--display,Oswald),sans-serif;font-size:14px;letter-spacing:.84px;line-height:1.3;border:1px solid var(--ink,#10110f);border-radius:0;cursor:pointer;transition:background .25s,color .25s}.ds-button:hover{background:var(--green,#354f3b);border-color:var(--green,#354f3b)}.ds-button:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}.ds-white{background:var(--paper,#fff);color:var(--ink,#10110f);border-color:var(--paper,#fff)}.ds-white:hover{background:#e7e9e2}",
+      "refersTo": "button-white"
+    },
+    {
+      "description": "Secondary square action.",
+      "name": "Outlined Button",
+      "kind": "button",
+      "html": "<button class=\"ds-button ds-outline\">BACK</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:space-between;gap:40px;min-height:44px;min-width:230px;padding:12px 20px;background:var(--ink,#10110f);color:var(--paper,#fff);font-family:var(--display,Oswald),sans-serif;font-size:14px;letter-spacing:.84px;line-height:1.3;border:1px solid var(--ink,#10110f);border-radius:0;cursor:pointer;transition:background .25s,color .25s}.ds-button:hover{background:var(--green,#354f3b);border-color:var(--green,#354f3b)}.ds-button:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}.ds-outline{background:var(--paper,#fff);color:var(--ink,#10110f)}",
+      "refersTo": "button-outline"
+    },
+    {
+      "description": "Labeled text entry.",
+      "name": "Underline Field",
+      "kind": "input",
+      "html": "<label class=\"ds-field\">Name<input class=\"ds-input\" placeholder=\"Sample name\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;font:13px Inter,Arial,sans-serif;gap:2px}.ds-input{font:inherit;border:0;border-bottom:1px solid var(--line,#d5d7d1);background:transparent;color:var(--ink,#10110f);padding:12px 0;min-height:44px;border-radius:0}.ds-input:focus{border-color:var(--green,#354f3b)}.ds-input:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}",
+      "refersTo": "input"
+    },
+    {
+      "kind": "nav",
+      "css": ".ds-nav{display:flex;flex-direction:column;font:clamp(24px,3.1vw,42px)/1.7 Inter,Arial,sans-serif}.ds-nav a{color:var(--ink,#10110f);text-decoration:none;transition:opacity .2s}.ds-nav a:hover{opacity:.5}.ds-nav .ds-active{color:var(--green,#354f3b)}.ds-nav a:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}",
+      "name": "Menu Navigation",
+      "html": "<nav class=\"ds-nav\"><a href=\"#home\">Home</a><a class=\"ds-active\" href=\"#reservation\">Reservation</a></nav>",
+      "description": "Large editorial route links."
+    },
+    {
+      "kind": "card",
+      "css": ".ds-resource{border:1px solid var(--line,#d5d7d1);background:var(--paper,#fff);color:var(--ink,#10110f);display:flex;flex-direction:column;align-items:flex-start;padding:18px;min-height:150px;cursor:pointer;font:14px Inter,Arial,sans-serif}.ds-resource>span{font:40px Oswald,sans-serif}.ds-resource strong{font-weight:400;margin:12px 0 6px}.ds-resource small{font-size:11px;color:var(--muted,#60645d)}.ds-resource:hover{border-color:var(--green,#354f3b)}.ds-resource:focus-visible{outline:2px solid var(--green,#354f3b);outline-offset:5px}",
+      "name": "Resource Choice",
+      "html": "<button class=\"ds-resource\"><span>01</span><strong>Bay 1</strong><small>Indoor golf bay</small></button>",
+      "description": "Outlined selectable booking resource."
+    }
+  ],
+  "narrative": {
+    "overview": "The implemented direction is a Spyker editorial adaptation for indoor golf: a white editorial canvas, black typography, centered brand mark and minimal overlay controls. Full viewport photography, condensed uppercase headings, staggered asymmetric photographs and huge chapter numerals carry the experience. The durable reference commitment comes from PRODUCT.md.\n\nMeasured reference at 952px viewport: hero display 56px / 2.24px tracking; menu links 38px Swiss721; header control 32px at x16 y28; Contact heading 20px, equal two columns with 16px gap; inputs 14px, 12px vertical padding, 47px high; Send CTA 36px high. The implementation adapts touch controls to at least 44px.\n\nLocally hosted Oswald replaces proprietary Futura PT Condensed; locally hosted Inter replaces Swiss721. These are approximations with different glyph shapes and wrapping. Reference hero moving media is replaced by generated concept photography with a subtle entrance scale. Images represent concepts, not actual business photography. About chapters use numbers rather than invented historic dates. GSAP timings are implementation estimates from observed transitions, not extracted source values: menu 0.65s power3.inOut, hero 1.1s power3.out, reveal 0.8s power2.out. Reduced motion removes animation.\n\n**Key Characteristics:**\n\n- Photographic hero and asymmetric editorial imagery.\n- Condensed headings against restrained body typography.\n- Flat surfaces, underline fields and rectangular actions.\n- Centered identity and full-screen navigation.",
+    "donts": [
+      "Don't describe the substituted fonts or estimated motion as exact reference assets or extracted timings.",
+      "Don't present generated concept images as actual business photographs.",
+      "Don't replace the established square actions and underline fields with unrelated decorative treatments."
+    ],
+    "rules": [],
+    "dos": [
+      "Do preserve the centered mark, photographic scale and asymmetric editorial rhythm when extending this reference adaptation.",
+      "Do use green for selection, focus and functional emphasis.",
+      "Do retain visible keyboard focus and at least 44px primary touch controls.",
+      "Do respect reduced-motion preferences in CSS and GSAP behavior."
+    ],
+    "keyCharacteristics": [
+      "Photographic hero and asymmetric editorial imagery.",
+      "Condensed headings against restrained body typography.",
+      "Flat surfaces, underline fields and rectangular actions.",
+      "Centered identity and full-screen navigation."
+    ]
+  }
+}

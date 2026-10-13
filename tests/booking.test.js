@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {saveBooking, available, overlaps} from '../src/booking.js';
+const base={id:'old',date:'2099-10-12',time:'10:00',duration:2,resources:['Bay 1'],status:'Confirmed',customer:{first:'A',last:'B',email:'a@b.co',phone:'09123456789',attendees:2,person:'A B'}};
+test('same bay rejects overlapping reservation',()=>assert.throws(()=>saveBooking([base],{...base,id:'new',time:'11:00'}),/unavailable/));
+test('different bays allow same times',()=>assert.equal(saveBooking([base],{...base,id:'new',resources:['Bay 2']}).length,2));
+test('back to back is allowed',()=>assert.equal(overlaps(base,{...base,time:'12:00'}),false));
+test('multi bay rejection is atomic',()=>{const list=[base];assert.throws(()=>saveBooking(list,{...base,id:'new',resources:['Bay 1','Bay 2']}));assert.deepEqual(list,[base]);});
+test('cancelled booking frees bay',()=>assert.equal(available([{...base,status:'Cancelled'}],base,'Bay 1'),true));
+test('failed reschedule preserves original',()=>{const list=[base,{...base,id:'second',time:'14:00'}];assert.throws(()=>saveBooking(list,{...base,time:'14:00'},'old'));assert.equal(list[0].time,'10:00');});
