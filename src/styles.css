@@ -19,6 +19,7 @@
   --paper: #fff;
   --muted: #60645d;
   --line: #d5d7d1;
+  --soft-line: rgb(240, 240, 240);
   --green: #354f3b;
   --display: Oswald, "Arial Narrow", sans-serif;
   --body: Inter, Arial, sans-serif;
@@ -1912,7 +1913,7 @@ footer.spyker-footer {
 
 .month-calendar {
   margin-top: 32px;
-  border-block: 1px solid var(--line);
+  border-block: 1px solid var(--soft-line);
   padding-block: 20px;
 }
 
@@ -1933,7 +1934,7 @@ footer.spyker-footer {
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--soft-line);
 }
 
 .month-grid {
@@ -1952,7 +1953,7 @@ footer.spyker-footer {
 
 .month-grid button {
   min-height: 56px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--soft-line);
   font-variant-numeric: tabular-nums;
   transition: background .2s, color .2s;
 }
@@ -2158,7 +2159,7 @@ footer.spyker-footer {
 }
 
 .calendar-slots button {
-  border: 1px solid var(--line);
+  border: 1px solid var(--soft-line);
   padding: 12px 5px;
   display: flex;
   flex-direction: column;
