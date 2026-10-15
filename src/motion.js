@@ -1,3 +1,4 @@
+import { finishHeroIntro } from './videoPlayback';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
@@ -149,8 +150,8 @@ export function animatePage(root) {
         const heroBottom = hero.querySelector('.hero-bottom');
         const heroWords = hero.querySelectorAll('.hero-content .split-word');
         const heroButton = hero.querySelector('.hero-content .button');
-        const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-          .from('.hero-image', { scale: 1.09, duration: 1.8 }, 0)
+        const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: () => finishHeroIntro(hero.querySelector('video')) })
+          .from('.hero-image', { scale: 0.9, opacity: 0, duration: 1 }, 0)
           .from('.hero-content .eyebrow', { y: 20, opacity: 0, duration: 0.7 }, 0.15);
 
         if (heroWords.length) {

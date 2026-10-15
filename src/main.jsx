@@ -11,6 +11,7 @@ import './styles.css';
 import Header, { destinations } from './Header';
 import { Arrow, Photo, Mark, Button, ButtonLabel, SocialIcons, WordStagger } from './ui';
 import { animatePage } from './motion';
+import { autoplayVideo } from './videoPlayback';
 import RouteTransition from './RouteTransition';
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
@@ -155,7 +156,7 @@ function HeritageMosaicTeaser() {
   );
 }
 
-function BackgroundVideo({ src, poster, className, alt, eager = false, playAction = false, mobileSrc }) {
+function BackgroundVideo({ src, poster, className, alt, eager = false, playAction = false, mobileSrc, waitForIntro = false }) {
   const videoRef = useRef(null);
   const [failed, setFailed] = useState(false);
   const [paused, setPaused] = useState(true);
@@ -169,7 +170,7 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
     const applyPreference = () => {
       if (preference.matches) videoRef.current?.pause();
-      else if (!playAction) videoRef.current?.play().catch(() => {});
+      else if (!playAction) autoplayVideo(videoRef.current);
     };
     if (loaded) {
       videoRef.current?.load();
@@ -186,7 +187,7 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
         setLoaded(true);
-        if (!playAction && !matchMedia('(prefers-reduced-motion: reduce)').matches) video.play().catch(() => {});
+        if (!playAction) autoplayVideo(video);
       } else video.pause();
     }, { rootMargin: '200px' });
     observer.observe(video);
@@ -222,7 +223,7 @@ function BackgroundVideo({ src, poster, className, alt, eager = false, playActio
   return (
     <>
       <Photo eager={eager} src={poster} alt={alt} className={className} />
-      {!failed && <video ref={videoRef} className={`${className} background-video`} muted loop playsInline preload={loaded ? 'metadata' : 'none'} aria-hidden="true"
+      {!failed && <video ref={videoRef} className={`${className} background-video`} muted loop playsInline data-intro-pending={waitForIntro ? '' : undefined} preload={loaded ? 'metadata' : 'none'} aria-hidden="true"
         onPlay={() => setPaused(false)} onPause={() => setPaused(true)} onError={event => { if (event.currentTarget.error) setFailed(true); }}>
         {loaded && <>
           {mobileSrcWebm && <source src={mobileSrcWebm} media="(max-width: 700px)" type="video/webm" />}
@@ -249,7 +250,7 @@ function Home() {
   return (
     <>
       <section className="hero">
-        <BackgroundVideo eager src="/media/facebook/hero-quality.mp4" mobileSrc="/media/facebook/hero-quality-mobile.mp4" poster="/media/facebook/hero-optimized-poster.jpg" className="hero-image" alt="Inside Hole In Hub" />
+        <BackgroundVideo eager waitForIntro src="/media/facebook/hero-quality.mp4" mobileSrc="/media/facebook/hero-quality-mobile.mp4" poster="/media/facebook/hero-optimized-poster.jpg" className="hero-image" alt="Inside Hole In Hub" />
         <div className="hero-shade" />
         <div className="hero-content">
           <p className="eyebrow">A NEW WAY TO PLAY</p>
