@@ -266,16 +266,50 @@ export function animatePage(root) {
         }
       });
 
-      // Hold the full-height video in view without slowing mobile scrolling.
+      // Statement Section: scroll scale from small scale to normal full width, and scale down smoothly on scroll out (no sticky)
       const statement = root.querySelector('.statement .scroll-scale-frame');
-      if (statement && desktop) {
-        ScrollTrigger.create({
-          trigger: statement,
-          start: 'top top',
-          end: () => `+=${window.innerHeight * 0.8}`,
-          pin: true,
-          invalidateOnRefresh: true,
+      if (statement) {
+        const statementTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: statement,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 0.5,
+          }
         });
+
+        statementTl
+          .fromTo(statement,
+            { scale: 0.82, transformOrigin: 'center center' },
+            { scale: 1, ease: 'sine.out', duration: 1 }
+          )
+          .to(statement, {
+            scale: 1,
+            duration: 0.5,
+          })
+          .to(statement, {
+            scale: 0.82,
+            ease: 'sine.in',
+            duration: 1,
+          });
+
+        const statementMedia = statement.querySelectorAll('.scroll-scale-img, .background-video');
+        if (statementMedia.length) {
+          gsap.fromTo(statementMedia,
+            { yPercent: -5, scale: 1.06 },
+            {
+              yPercent: 5,
+              scale: 1.01,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: statement,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 0.5,
+              }
+            }
+          );
+        }
       }
 
       // Venue promotions: animate images similar to gallery images, with stagger
@@ -931,6 +965,20 @@ export function animatePage(root) {
             ease: 'power3.out',
           });
         }
+
+        // Reservation Page: sticky sidebar pinning on desktop (for ScrollSmoother compatibility)
+        const bookingLayout = root.querySelector('.booking-layout');
+        const sidebarSticky = root.querySelector('.sidebar-sticky');
+        if (desktop && bookingLayout && sidebarSticky) {
+          ScrollTrigger.create({
+            trigger: sidebarSticky,
+            start: 'top 50px',
+            end: () => `+=${Math.max(0, bookingLayout.offsetHeight - sidebarSticky.offsetHeight)}`,
+            pin: true,
+            pinSpacing: false,
+            invalidateOnRefresh: true,
+          });
+        }
       }
 
       // Gallery Page: sticky left component + home images scale animation + reduced parallax
@@ -945,9 +993,9 @@ export function animatePage(root) {
             if (grid && stickyCol) {
               ScrollTrigger.create({
                 trigger: stickyCol,
-                start: 'top 100px',
+                start: 'top top',
                 endTrigger: grid,
-                end: () => `bottom ${100 + stickyCol.offsetHeight}px`,
+                end: () => `bottom ${stickyCol.offsetHeight}px`,
                 pin: true,
                 pinSpacing: false,
                 invalidateOnRefresh: true,

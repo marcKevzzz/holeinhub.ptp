@@ -66,19 +66,6 @@ function Footer() {
             <Link to="/about">Privacy policy</Link>
             <Link to="/about">Terms and conditions</Link>
           </div>
-
-          <div className="spyker-footer-secondary">
-            <a
-              href="#newsletter"
-              onClick={(e) => {
-                e.preventDefault();
-                alert('Thank you for subscribing to Hole In Hub updates.');
-              }}
-            >
-              Subscribe to the newsletter
-            </a>
-            <Link to="/contacts">Hole In Hub community</Link>
-          </div>
         </div>
       </div>
     </footer>

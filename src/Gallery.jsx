@@ -261,7 +261,10 @@ export default function Gallery() {
                   role="tab"
                   aria-selected={isActive}
                   className={`news-tab-btn ${isActive ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat)}
+                  onClick={(e) => {
+                    setActiveCategory(cat);
+                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                  }}
                 >
                   <span>{cat}</span>
                   <span className="tab-underline" />
@@ -354,6 +357,8 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
   const contentRef = useRef(null);
   const closeBtnRef = useRef(null);
   const morphRef = useRef(null);
+  const morphContainRef = useRef(null);
+  const morphCoverRef = useRef(null);
   const isClosingRef = useRef(false);
 
   const handleClose = () => {
@@ -392,6 +397,21 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
       left: currentTarget.left,
       width: currentTarget.width,
       height: currentTarget.height,
+      backgroundColor: '#111111',
+    });
+    if (morphContainRef.current) {
+      gsap.set(morphContainRef.current, { opacity: 1 });
+    }
+    if (morphCoverRef.current && !story.poster) {
+      gsap.fromTo(morphCoverRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.32, delay: 0.1, ease: 'power2.inOut' }
+      );
+    }
+    gsap.to(morphRef.current, {
+      backgroundColor: story.poster ? '#f0f0f0' : '#111111',
+      duration: 0.46,
+      ease: 'power3.inOut',
     });
     gsap.set(mediaRef.current, { opacity: 0 });
 
@@ -459,6 +479,24 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
         height: originRect.height,
         opacity: 1,
         display: 'block',
+        backgroundColor: story.poster ? '#f0f0f0' : '#111111',
+      });
+      if (morphContainRef.current) {
+        gsap.set(morphContainRef.current, { opacity: 1 });
+      }
+      if (morphCoverRef.current && !story.poster) {
+        gsap.set(morphCoverRef.current, { opacity: 1 });
+        gsap.to(morphCoverRef.current, {
+          opacity: 0,
+          duration: 0.36,
+          ease: 'power2.inOut',
+          delay: 0.08,
+        });
+      }
+      gsap.to(morphRef.current, {
+        backgroundColor: '#111111',
+        duration: 0.48,
+        ease: 'power2.out',
       });
       gsap.set(mediaRef.current, { opacity: 0 });
       gsap.set(modalRef.current, { opacity: 0 });
@@ -528,8 +566,22 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
   return (
     <>
       {/* Morphing image proxy */}
-      <div ref={morphRef} className="news-modal-morph-img" style={{ display: 'none' }}>
-        <img src={story.image} alt={story.title} />
+      <div ref={morphRef} className={`news-modal-morph-img ${story.poster ? 'promotion-media' : ''}`} style={{ display: 'none' }}>
+        <img
+          ref={morphContainRef}
+          className="morph-img-contain"
+          src={mediaImages[story.image]?.src || story.image}
+          alt={story.title}
+        />
+        {!story.poster && (
+          <img
+            ref={morphCoverRef}
+            className="morph-img-cover"
+            src={mediaImages[story.image]?.src || story.image}
+            alt=""
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       <div
@@ -568,9 +620,9 @@ function StoryModal({ story, originRect, originElementRef, onClose }) {
             <h2>{story.title}</h2>
             <p className="news-modal-lead">{story.summary}</p>
             <p>{story.body}</p>
-            <div className="news-modal-footer">
+            {/* <div className="news-modal-footer">
               <span>Hole In Hub Golf &amp; Lounge · Quezon City</span>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

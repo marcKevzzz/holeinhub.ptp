@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Arrow, LeftArrow, Photo, Button, ButtonLabel } from './ui';
 import {
   resources,
@@ -158,6 +159,16 @@ export default function Reservation() {
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
   }, []);
+
+  useEffect(() => {
+    const layout = document.querySelector('.booking-layout');
+    if (!layout || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      ScrollTrigger.refresh();
+    });
+    ro.observe(layout);
+    return () => ro.disconnect();
+  }, [confirmed]);
 
   function persist(next) {
     localStorage.setItem(storageKey, JSON.stringify(next));
