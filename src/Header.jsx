@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
-import { Arrow, Mark, Photo, ButtonLabel } from './ui';
+import { Arrow, Mark, Photo, ButtonLabel, SocialIcons } from './ui';
 
 export const destinations = [
   ['/', 'Home'],
@@ -75,7 +75,7 @@ export default function Header() {
     document.body.classList.add('menu-transitioning');
 
     const elementsToFade = panel.current
-      ? panel.current.querySelectorAll('.menu-links, .menu-photo, .menu-bottom')
+      ? panel.current.querySelectorAll('.menu-links, .menu-socials a, .menu-photo, .menu-bottom')
       : [];
 
     gsap.to(elementsToFade, {
@@ -213,6 +213,7 @@ export default function Header() {
 
       timeline.current
         .from('.menu-link-text', { yPercent: 110, duration: 0.65, stagger: 0.055, ease: 'power3.out' }, 0.25)
+        .from('.menu-socials a', { opacity: 0, y: 12, duration: 0.4, stagger: 0.07, ease: 'power3.out' }, '-=0.75')
         .from('.menu-photo', { clipPath: 'inset(20%)', scale: 1.08, duration: 0.75, ease: 'power3.out' }, 0.2)
         .from('.menu-bottom > *', { opacity: 0, y: 10, duration: 0.45, stagger: 0.06 }, 0.4);
     });
@@ -284,6 +285,7 @@ export default function Header() {
             aria-label="Navigation menu"
           >
             <div className="menu-top">
+              <div className="menu-navigation">
               <nav className="menu-links">
                 {destinations.map(([to, title]) => (
                   <NavLink
@@ -300,6 +302,8 @@ export default function Header() {
                   </NavLink>
                 ))}
               </nav>
+              <SocialIcons className="menu-socials" />
+              </div>
               <div className="menu-photo">
                 <Photo src="/media/facebook/social-seating.png" alt="Seating beside the Hole In Hub simulator bays" />
               </div>

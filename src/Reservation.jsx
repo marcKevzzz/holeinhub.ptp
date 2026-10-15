@@ -3,18 +3,26 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Arrow, LeftArrow, Photo, Button, ButtonLabel } from './ui';
 import {
   resources,
-  hours,
   today,
   addDays,
   available,
   saveBooking,
-  validate,
   readBookings,
   storageKey,
-  start,
-  getDurationSlots,
-  FULLY_BOOKED_SAMPLE_DAY
+  formatTime,
+  money,
+  bookingLabel,
+  serviceDayAllowed,
+  serviceResources,
+  sessionOptions,
+  scheduleError,
+  quoteBooking,
+  selectHour
 } from './booking';
+
+import { services } from './services';
+import { monthDays, shiftMonth } from './calendar';
+import { hourRange, paintSelection } from './dragSelection';
 
 const steps = ['Experience', 'Date & time', 'Select bays', 'Contact details', 'Review'];
 const emptyCustomer = { first: '', last: '', email: '', phone: '', attendees: 1, person: '' };
@@ -22,8 +30,9 @@ const emptyCustomer = { first: '', last: '', email: '', phone: '', attendees: 1,
 const initial = () => ({
   service: 'Regular service',
   date: addDays(today(), 1),
-  time: '09:00',
-  duration: 1,
+  time: '',
+  duration: 0,
+  rental: '',
   resources: [],
   customer: { ...emptyCustomer }
 });
@@ -36,7 +45,21 @@ const dateLabel = date =>
     year: 'numeric'
   }).format(new Date(`${date}T12:00:00+08:00`));
 
-function Summary({ booking, confirmation = false }) {
+function Price({ booking, saved = false }) {
+  const price = saved ? booking.price : quoteBooking(booking);
+  if (!price) return <p className="small">Select hours to see the total.</p>;
+  const packageBooking = booking.service.startsWith('KPGA');
+  return <section className="booking-price" aria-label="Price breakdown">
+    <div className="price-total" role="status" aria-live="polite">
+      <span>{packageBooking ? 'Package total' : 'Total'}</span><strong>{money(price.total)}</strong>
+    </div>
+    {price.holiday && <p className="small">Holiday rates apply on this date.</p>}
+    {booking.service === 'Regular service' && !booking.resources.length && <p className="small">One bay shown. Bay selection updates the total.</p>}
+    {packageBooking && <p className="small">{booking.service === 'KPGA group lessons' ? 'Per participant, 4 classes. First class booked here; arrange remaining classes with the venue.' : '8-session package. First visit booked here; confirm session length and remaining visits with the coach.'}</p>}
+  </section>;
+}
+
+function Summary({ booking, confirmation = false, showPrice = true }) {
   return (
     <div className="summary">
       <p className="eyebrow">{confirmation ? 'RESERVATION CONFIRMED' : 'YOUR SELECTION'}</p>
@@ -48,15 +71,15 @@ function Summary({ booking, confirmation = false }) {
         </div>
         <div>
           <dt>Start time</dt>
-          <dd>{booking.time} · Asia/Manila</dd>
+          <dd>{booking.time ? `${formatTime(Number(booking.time.slice(0, 2)))}–${formatTime(Number(booking.time.slice(0, 2)) + Number(booking.duration))}` : 'Choose hours'} · Asia/Manila</dd>
         </div>
         <div>
           <dt>Duration</dt>
-          <dd>{booking.duration} {Number(booking.duration) === 1 ? 'hour' : 'hours'}</dd>
+          <dd>{booking.rental ? `${booking.rental === 'half' ? 'Half day' : 'Whole day'} · ` : ''}{booking.duration || 0} {Number(booking.duration) === 1 ? 'hour' : 'hours'}</dd>
         </div>
         <div>
           <dt>Bays</dt>
-          <dd>{booking.resources.length ? booking.resources.join(', ') : 'Choose your spaces'}</dd>
+          <dd>{booking.resources.length ? booking.resources.map(bookingLabel).join(', ') : 'Choose your spaces'}</dd>
         </div>
         <div>
           <dt>Players</dt>
@@ -87,7 +110,7 @@ function Summary({ booking, confirmation = false }) {
           </div>
         )}
       </dl>
-      <p className="small">Quezon City, Philippines · Confirmation details will be stored securely on your device.</p>
+      {showPrice && <Price booking={booking} saved={confirmation} />}
     </div>
   );
 }
@@ -105,6 +128,7 @@ export default function Reservation() {
     return initial();
   });
 
+  const [month, setMonth] = useState(() => booking.date.slice(0, 7));
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -113,6 +137,19 @@ export default function Reservation() {
   const [busy, setBusy] = useState(false);
   const stepHeading = useRef();
   const saving = useRef(false);
+  const drag = useRef(null);
+
+  useEffect(() => {
+    const finish = () => { if (drag.current) drag.current.active = false; };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    window.addEventListener('blur', finish);
+    return () => {
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+      window.removeEventListener('blur', finish);
+    };
+  }, []);
 
   useEffect(() => {
     const sync = e => {
@@ -128,7 +165,65 @@ export default function Reservation() {
   }
 
   function update(key, value) {
-    setBooking(b => ({ ...b, [key]: value }));
+    const next = { ...booking, [key]: value };
+    if (key === 'service' || key === 'date') {
+      next.time = '';
+      next.duration = 0;
+      next.rental = '';
+      next.resources = [];
+    }
+    if (key === 'service') {
+      if (next.date < today()) next.date = today();
+      while (!serviceDayAllowed(value, next.date)) next.date = addDays(next.date, 1);
+      setMonth(next.date.slice(0, 7));
+    }
+    setBooking(next);
+    if (key === 'date') setMonth(value.slice(0, 7));
+    setError('');
+  }
+
+  function slotFree(candidate) {
+    if (scheduleError(candidate)) return false;
+    const spaces = serviceResources(candidate.service);
+    return candidate.service === 'Whole venue rental'
+      ? spaces.every(r => available(list, candidate, r, editId))
+      : spaces.some(r => available(list, candidate, r, editId));
+  }
+
+  function chooseSlot(option) {
+    try {
+      const fixed = booking.service === 'Whole venue rental' || booking.service === 'KPGA group lessons';
+      const next = fixed ? { ...booking, ...option, resources: booking.service === 'Whole venue rental' ? [...resources] : [] } : selectHour(booking, option.time);
+      if (next.duration && !slotFree(next)) throw new Error('No space is free for the full selection. Choose another range.');
+      setBooking(next);
+      setError('');
+    } catch (err) { setError(err.message); }
+  }
+
+  function startDrag(event, kind, value) {
+    drag.current = null;
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (kind === 'time' && ['Whole venue rental', 'KPGA group lessons'].includes(booking.service)) return;
+    drag.current = { active: true, kind, anchor: value, moved: false, booking,
+      crossed: [value], remove: booking.resources.includes(value) };
+  }
+
+  function extendDrag(event, kind, value) {
+    const gesture = drag.current;
+    if (!gesture?.active || gesture.kind !== kind || !(event.buttons & 1)) return;
+    if (!gesture.moved && value === gesture.anchor) return;
+    gesture.moved = true;
+    if (kind === 'time') {
+      const next = { ...gesture.booking, ...hourRange(gesture.anchor, value), resources: [] };
+      if (!slotFree(next)) {
+        setError('That range includes unavailable hours. Choose another range.');
+        return;
+      }
+      setBooking(next);
+    } else {
+      if (!gesture.crossed.includes(value)) gesture.crossed.push(value);
+      setBooking(b => ({ ...b, resources: paintSelection(gesture.booking.resources, gesture.crossed, gesture.remove) }));
+    }
     setError('');
   }
 
@@ -159,7 +254,8 @@ export default function Reservation() {
     }
     if (field === 'attendees') {
       const n = Number(value);
-      if (!n || n < 1 || n > 20) err = 'Number of players must be between 1 and 20.';
+      const max = booking.service === 'KPGA group lessons' ? 8 : 20;
+      if (!Number.isInteger(n) || n < 1 || n > max) err = `Number of players must be a whole number between 1 and ${max}.`;
     }
     setFieldErrors(prev => ({ ...prev, [field]: err }));
     return err;
@@ -180,20 +276,17 @@ export default function Reservation() {
   function next() {
     let message = '';
     if (step === 1) {
-      if (start(booking) <= Date.now()) {
-        message = 'Please choose a future date and start time.';
-      } else if (Number(booking.time.slice(0, 2)) + Number(booking.duration) > 21) {
-        message = 'Reservations must conclude by 21:00 operating hours.';
-      }
+      message = scheduleError(booking);
+      if (!message && !slotFree(booking)) message = 'No spaces available. Choose another time.';
     } else if (step === 2) {
       if (!booking.resources.length) {
-        message = 'Please select at least one simulator bay.';
+        message = 'Select at least one bay.';
       } else if (booking.resources.some(r => !available(list, booking, r, editId))) {
-        message = 'One of your selected bays is unavailable at this time. Please choose another.';
+        message = 'A selected bay is unavailable. Choose another.';
       }
     } else if (step === 3) {
       if (!validateContactStep()) {
-        message = 'Please complete all required contact fields correctly.';
+        message = 'Check the highlighted fields.';
       }
     }
 
@@ -227,7 +320,7 @@ export default function Reservation() {
       try {
         localStorage.setItem('hub-customer-email', booking.customer.email);
       } catch {}
-      setConfirmed(saved);
+      setConfirmed(nextList.find(b => b.id === saved.id));
       setEditId(null);
     } catch (e) {
       setError(e.message);
@@ -237,23 +330,22 @@ export default function Reservation() {
     }
   }
 
-  const noResources = resources.every(r => !available(list, booking, r, editId));
+  const noResources = serviceResources(booking.service).every(r => !available(list, booking, r, editId));
 
   return (
     <div className="reservation-page">
       {!confirmed && (
         <div className="reservation-title">
           <h1>MAKE A RESERVATION</h1>
-          <p>Book your simulator bay for an unmatched indoor golf experience.</p>
+          <p>Reserve a bay, lesson or venue.</p>
         </div>
       )}
 
       {confirmed ? (
         <div className="confirmation">
           <p className="eyebrow">RESERVATION CONFIRMED</p>
-          <h2 ref={stepHeading} tabIndex="-1">YOUR ROUND IS CONFIRMED.</h2>
-          <p>We look forward to hosting you at Hole In Hub Golf & Lounge.</p>
-          <p className="reference">{confirmed.id}</p>
+          <h2 >YOUR ROUND IS CONFIRMED.</h2>
+          <p className="reference">{bookingLabel(confirmed.id)}</p>
           <Summary booking={confirmed} confirmation />
 
           <div className="actions" style={{ marginTop: '40px', justifyContent: 'center' }}>
@@ -261,7 +353,9 @@ export default function Reservation() {
               className="button"
               onClick={() => {
                 setConfirmed(null);
-                setBooking(initial());
+                const fresh = initial();
+                setBooking(fresh);
+                setMonth(fresh.date.slice(0, 7));
                 setStep(0);
               }}
             >
@@ -296,8 +390,8 @@ export default function Reservation() {
             </div>
 
             <div className="step-content">
-              <p className="small">STEP {step + 1} OF 5{editId ? ` · RESCHEDULING ${editId}` : ''}</p>
-              <h2 ref={stepHeading} tabIndex="-1">
+              <p className="small">STEP {step + 1} OF 5{editId ? ` · RESCHEDULING ${bookingLabel(editId)}` : ''}</p>
+              <h2>
                 {[
                   'SELECT YOUR EXPERIENCE',
                   'CHOOSE DATE & TIME',
@@ -310,14 +404,8 @@ export default function Reservation() {
               {/* STEP 0: EXPERIENCE */}
               {step === 0 && (
                 <>
-                  <p>Choose the format of your upcoming golf session.</p>
                   <div className="service-options">
-                    {[
-                      ['Regular service', 'Standard simulator bay session for practice or casual play with companions.'],
-                      ['Package', 'Extended round package with premium lounge access and refreshments.'],
-                      ['Promotional offer', 'Seasonal rates and introductory privileges.'],
-                      ['Group booking', 'Reserve multiple adjacent bays for parties, tournaments, or team gatherings.']
-                    ].map(([name, copy], i) => (
+                    {services.map(({ name, title, rate, copy, image, alt, poster }) => (
                       <button
                         type="button"
                         key={name}
@@ -325,9 +413,10 @@ export default function Reservation() {
                         aria-pressed={booking.service === name}
                         onClick={() => update('service', name)}
                       >
-                        <span>0{i + 1}</span>
+                        <Photo className={`service-thumbnail ${poster ? 'poster' : ''}`} src={`/media/facebook/${image}`} alt={alt} />
                         <div>
-                          <strong>{name}</strong>
+                          <strong>{title}</strong>
+                          <span className="service-rate">{rate}</span>
                           <p>{copy}</p>
                         </div>
                         <span className="radio" />
@@ -340,138 +429,107 @@ export default function Reservation() {
               {/* STEP 1: DATE & TIME */}
               {step === 1 && (
                 <>
-                  <div className="fields-grid">
-                    <label className="field">
-                      <span>Date *</span>
-                      <div className="field-input-wrap">
-                        <input
-                          type="date"
-                          min={today()}
-                          value={booking.date}
-                          onChange={e => e.target.value && update('date', e.target.value)}
-                        />
-                      </div>
-                    </label>
-                    <label className="field">
-                      <span>Start time *</span>
-                      <div className="field-input-wrap">
-                        <select value={booking.time} onChange={e => update('time', e.target.value)}>
-                          {getDurationSlots(booking.duration).map(h => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </label>
-                    <label className="field">
-                      <span>Duration *</span>
-                      <div className="field-input-wrap">
-                        <select
-                          value={booking.duration}
-                          onChange={e => {
-                            const newDuration = Number(e.target.value);
-                            const validSlots = getDurationSlots(newDuration);
-                            const nextTime = validSlots.includes(booking.time) ? booking.time : (validSlots[0] || '09:00');
-                            setBooking(b => ({ ...b, duration: newDuration, time: nextTime }));
-                            setError('');
-                          }}
-                        >
-                          {[1, 2, 3, 4].map(n => (
-                            <option value={n} key={n}>
-                              {n} {n === 1 ? 'hour' : 'hours'}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </label>
-                  </div>
 
-                  <p className="eyebrow" style={{ marginTop: '24px' }}>QUICK SELECT DAY</p>
-                  <div className="date-strip">
-                    {Array.from({ length: 7 }, (_, i) => addDays(today(), i)).map(d => {
-                      const isFullyBooked = d === FULLY_BOOKED_SAMPLE_DAY;
-                      return (
-                        <button
-                          type="button"
-                          key={d}
-                          aria-pressed={d === booking.date}
-                          className={`${d === booking.date ? 'selected' : ''} ${isFullyBooked ? 'fully-booked-day' : ''}`}
-                          onClick={() => update('date', d)}
-                        >
-                          <span>
-                            {new Date(`${d}T12:00:00+08:00`).toLocaleDateString('en-PH', {
-                              weekday: 'short',
-                              timeZone: 'Asia/Manila'
-                            })}
-                          </span>
-                          <strong>{d.slice(-2)}</strong>
-                        </button>
-                      );
+                  <section className="month-calendar" aria-label="Choose a reservation date">
+                    <div className="calendar-heading">
+                      <button type="button" aria-label="Previous month" disabled={month <= today().slice(0, 7)} onClick={() => setMonth(shiftMonth(month, -1))}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+                      </button>
+                      <h3 aria-live="polite">{new Date(`${month}-01T12:00:00+08:00`).toLocaleDateString('en-PH', { month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}</h3>
+                      <button type="button" aria-label="Next month" onClick={() => setMonth(shiftMonth(month, 1))}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+                      </button>
+                    </div>
+                    <div className="month-grid">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span className="weekday" key={day}>{day}</span>)}
+                      {monthDays(month).map((date, i) => {
+                        if (!date) return <span key={`empty-${i}`} />;
+                        const past = date < today();
+                        const allowed = serviceDayAllowed(booking.service, date);
+                        const hasSlots = !past && allowed && sessionOptions({ ...booking, date }).some(option => slotFree({ ...booking, date, ...option }));
+                        return <button type="button" key={date} disabled={!hasSlots}
+                          className={date === booking.date && hasSlots ? 'selected' : ''}
+                          aria-pressed={date === booking.date && hasSlots}
+                          aria-current={date === today() ? 'date' : undefined}
+                          aria-label={`${dateLabel(date)}${past ? ', past' : !allowed ? ', no service' : hasSlots ? ', available' : ', fully booked'}`}
+                          onClick={() => update('date', date)}
+                          >
+                          {Number(date.slice(-2))}
+                          <span className="calendar-day-status">{past ? 'Past' : !allowed ? 'Off' : hasSlots ? '' : 'Full'}</span>
+                        </button>;
+                      })}
+                    </div>
+
+                  </section>
+
+                  <div className="time-selection-heading">
+                    <h3>{booking.service === 'Whole venue rental' ? 'CHOOSE YOUR RENTAL' : booking.service === 'KPGA group lessons' ? 'YOUR CLASS TIME' : 'CHOOSE YOUR HOURS'}</h3>
+                    {booking.duration > 0 && <button type="button" className="text-button" onClick={() => {
+                      setBooking(b => ({ ...b, time: '', duration: 0, rental: '', resources: [] }));
+                      setError('');
+                    }}>Clear selection</button>}
+                  </div>
+                  {!['Whole venue rental', 'KPGA group lessons'].includes(booking.service) && <p className="small">Select consecutive hours. Add or remove an end hour, or clear to start again.</p>}
+                  <div className={`calendar-slots ${booking.service === 'Whole venue rental' ? 'rental-options' : ''}`}>
+                    {sessionOptions(booking).map(option => {
+                      const candidate = { ...booking, ...option };
+                      const free = slotFree(candidate);
+                      const hour = Number(option.time.slice(0, 2));
+                      const first = Number(booking.time.slice(0, 2));
+                      const selected = booking.service === 'Whole venue rental' ? booking.rental === option.rental : booking.duration > 0 && hour >= first && hour < first + booking.duration;
+                      const price = quoteBooking(candidate);
+                      const label = option.rental ? (option.rental === 'half' ? 'Half day' : 'Whole day') : `${formatTime(hour)}–${formatTime(hour + option.duration)}`;
+                      return <button type="button" key={option.rental || option.time}
+                        className={selected && free ? 'selected' : ''}
+                        disabled={!free} aria-pressed={selected && free}
+                        aria-label={`${label}${price ? `, ${money(price.total)}` : ''}${free ? '' : ', unavailable'}`}
+                        onPointerDown={event => startDrag(event, 'time', option.time)}
+                        onPointerEnter={event => extendDrag(event, 'time', option.time)}
+                        onClick={event => { if (!event.detail || !drag.current?.moved) chooseSlot(option); }}>
+                        <strong>{label}</strong>
+                        {option.rental && <span>{formatTime(hour)}–{formatTime(hour + option.duration)}</span>}
+                        <small>{!free ? 'Unavailable' : selected ? 'Selected' : price ? `${money(price.total)}${booking.service.startsWith('KPGA') ? ' / package' : ''}` : 'Available'}</small>
+                      </button>;
                     })}
                   </div>
-
-                  <p className="eyebrow" style={{ marginTop: '24px' }}>
-                    AVAILABLE TIME SLOTS ({booking.duration === 1 ? '1 HR INTERVALS' : `${booking.duration} HR INTERVALS`})
-                  </p>
-                  <div className="calendar-slots">
-                    {getDurationSlots(booking.duration).map(time => {
-                      const b = { ...booking, date: booking.date, time };
-                      const durationFits = Number(time.slice(0, 2)) + Number(booking.duration) <= 21;
-                      const free = durationFits && resources.some(r => available(list, b, r, editId));
-                      const isPast = start(b) <= Date.now();
-                      const disabled = !free || isPast;
-                      const endHour = Number(time.slice(0, 2)) + Number(booking.duration);
-                      const endStr = `${String(endHour).padStart(2, '0')}:00`;
-
-                      return (
-                        <button
-                          type="button"
-                          key={time}
-                          className={time === booking.time ? 'selected' : ''}
-                          disabled={disabled}
-                          onClick={() => update('time', time)}
-                          aria-label={`${time} to ${endStr} ${free ? 'available' : 'unavailable'}`}
-                        >
-                          <strong>{time}</strong>
-                          <small>{isPast ? 'Past' : free ? `Until ${endStr}` : 'Booked'}</small>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {!sessionOptions(booking).length && <p className="notice" role="status">No service on this date. Choose another day.</p>}
                 </>
               )}
 
               {/* STEP 2: BAYS */}
               {step === 2 && (
                 <>
-                  <p>Choose one or multiple bays for your round. Multiple bays are reserved together.</p>
                   {noResources && (
                     <p className="error" role="status">
-                      No simulator bays are available for the selected slot. Please go back and choose another time.
+                      No bays available. Choose another time.
                     </p>
                   )}
                   <div className="resource-options">
-                    {resources.map((r, i) => {
+                    {serviceResources(booking.service).map(r => {
                       const free = available(list, booking, r, editId);
                       const isSelected = booking.resources.includes(r);
                       return (
                         <button
                           type="button"
                           key={r}
-                          disabled={!free && !isSelected}
+                          disabled={booking.service === 'Whole venue rental' || (!free && !isSelected)}
                           className={isSelected ? 'selected' : ''}
                           aria-pressed={isSelected}
-                          onClick={() =>
+                          onPointerDown={event => startDrag(event, 'bay', r)}
+                          onPointerEnter={event => { if (free && booking.service !== 'Whole venue rental') extendDrag(event, 'bay', r); }}
+                          onClick={event => {
+                            if (event.detail && drag.current?.moved) return;
                             update(
                               'resources',
                               isSelected
                                 ? booking.resources.filter(x => x !== r)
                                 : [...booking.resources, r]
-                            )
-                          }
+                            );
+                          }}
                         >
-                          <span className="bay-number">{i < 6 ? `0${i + 1}` : 'PL'}</span>
-                          <strong>{r}</strong>
-                          <small>{free ? 'Available for duration' : 'Unavailable'}</small>
+                          <span className="bay-number">{r.startsWith('Bay') ? r.slice(-1).padStart(2, '0') : 'VIP'}</span>
+                          <strong>{bookingLabel(r)}</strong>
+                          <small>{booking.service === 'Whole venue rental' ? 'Included in rental' : free ? 'Available for duration' : 'Unavailable'}</small>
                         </button>
                       );
                     })}
@@ -482,7 +540,7 @@ export default function Reservation() {
               {/* STEP 3: CONTACT DETAILS */}
               {step === 3 && (
                 <>
-                  <p>Please enter your contact information for reservation confirmation.</p>
+                  <p>Enter your contact details.</p>
                   <div className="fields-grid">
                     <label className="field">
                       <span>First name *</span>
@@ -550,7 +608,7 @@ export default function Reservation() {
                         <input
                           type="number"
                           min="1"
-                          max="20"
+                          max={booking.service === 'KPGA group lessons' ? 8 : 20}
                           value={booking.customer.attendees}
                           onChange={e => updateCustomer('attendees', e.target.value)}
                           onBlur={e => validateField('attendees', e.target.value)}
@@ -560,66 +618,12 @@ export default function Reservation() {
                       {fieldErrors.attendees && <span className="inline-error">{fieldErrors.attendees}</span>}
                     </label>
                   </div>
+                  {booking.service === 'KPGA group lessons' && <Price booking={booking} />}
                 </>
               )}
 
               {/* STEP 4: REVIEW & CONFIRM */}
-              {step === 4 && (
-                <div className="review-editorial-container">
-                  <div className="review-booking-summary">
-                    <Summary booking={booking} />
-                  </div>
-
-                  <div className="review-editorial-header">
-                    <p className="eyebrow">PRE-ROUND BRIEFING &amp; PRIVILEGES</p>
-                    <h3>CHAMPIONSHIP INDOOR GOLF STANDARDS</h3>
-                    <p className="review-editorial-lead">
-                      Your simulator suite is reserved exclusively for your party. Below are the clubhouse amenities, arrival guidelines, and session inclusions prepared for your round.
-                    </p>
-                  </div>
-
-                  <div className="review-amenities-grid">
-                    <div className="review-amenity-card">
-                      <div className="review-card-icon">01</div>
-                      <h4>Tour-Grade Telemetry</h4>
-                      <p>Dual ultra-high-speed optical sensors capture 2,000 frames per second at impact. Track clubhead speed, launch angle, spin rate, and carry distance on 100+ championship courses worldwide.</p>
-                    </div>
-
-                    <div className="review-amenity-card">
-                      <div className="review-card-icon">02</div>
-                      <h4>Equipment &amp; Club Valet</h4>
-                      <p>Feel free to bring your own golf bag or enjoy complimentary access to our current-season Titleist, Callaway, and TaylorMade rental sets. Titleist Pro V1 practice balls provided.</p>
-                    </div>
-
-                    <div className="review-amenity-card">
-                      <div className="review-card-icon">03</div>
-                      <h4>Arrival &amp; Check-In Protocol</h4>
-                      <p>Please arrive 15 minutes prior to your scheduled tee time. Present your digital reservation code at our concierge desk for complimentary locker assignment and suite escort.</p>
-                    </div>
-
-                    <div className="review-amenity-card">
-                      <div className="review-card-icon">04</div>
-                      <h4>In-Bay Dining &amp; Lounge</h4>
-                      <p>Dedicated suite host service with digital ordering for artisanal pour overs, craft cocktails, curated single malts, and gourmet clubhouse dining delivered directly to your bay.</p>
-                    </div>
-                  </div>
-
-                  <div className="review-policy-banner">
-                    <div className="review-policy-item">
-                      <strong>Flexible Rescheduling</strong>
-                      <span>Complimentary changes up to 6 hours before tee time</span>
-                    </div>
-                    <div className="review-policy-item">
-                      <strong>Dress Protocol</strong>
-                      <span>Clean athletic sneakers or soft-spike golf shoes</span>
-                    </div>
-                    <div className="review-policy-item">
-                      <strong>Digital Scorecard</strong>
-                      <span>Ball telemetry &amp; video swings saved to your profile</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {step === 4 && <Summary booking={booking} />}
 
               {error && <p className="error" role="alert">{error}</p>}
 
@@ -678,13 +682,10 @@ export default function Reservation() {
 
           <aside className="booking-sidebar">
             <div className="sidebar-sticky">
-              <Photo className={booking.service === 'Promotional offer' ? 'service-promo-image' : ''} src={`/media/facebook/${{
-                'Regular service': 'venue-overview.png',
-                'Package': 'social-seating.png',
-                'Promotional offer': 'october-daytime-promo.png',
-                'Group booking': 'family-play.png'
-              }[booking.service] || 'venue-overview.png'}`} alt={`${booking.service} at Hole In Hub`} />
-              <Summary booking={booking} />
+              <Photo className={services.find(s => s.name === booking.service)?.poster ? 'service-promo-image' : ''}
+                src={`/media/facebook/${services.find(s => s.name === booking.service)?.image || 'venue-overview.png'}`}
+                alt={services.find(s => s.name === booking.service)?.alt || `${booking.service} at Hole In Hub`} />
+              <Summary booking={booking} showPrice={step !== 2} />
             </div>
           </aside>
         </div>

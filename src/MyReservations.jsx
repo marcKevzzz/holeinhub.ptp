@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Arrow, Button, ButtonLabel } from './ui';
-import { readBookings, saveBooking, available, storageKey } from './booking';
+import { readBookings, storageKey, money, formatTime, bookingLabel } from './booking';
 
 const dateLabel = date =>
   new Intl.DateTimeFormat('en-PH', {
@@ -42,7 +42,7 @@ export default function MyReservations() {
       const latest = readBookings();
       const nextList = latest.map(b => (b.id === id ? { ...b, status: 'Cancelled' } : b));
       persist(nextList);
-      setMessage(`Reservation ${id} has been cancelled.`);
+      setMessage(`Reservation ${bookingLabel(id)} has been cancelled.`);
       setCancelId(null);
     } catch (err) {
       setMessage(err.message);
@@ -53,7 +53,7 @@ export default function MyReservations() {
   const filtered = list.filter(b => {
     if (!trimmedQuery) return true;
     const matchEmail = b.customer?.email?.toLowerCase().includes(trimmedQuery);
-    const matchId = b.id?.toLowerCase().includes(trimmedQuery);
+    const matchId = b.id?.toLowerCase().includes(trimmedQuery) || bookingLabel(b.id).toLowerCase().includes(trimmedQuery);
     const matchName = `${b.customer?.first || ''} ${b.customer?.last || ''}`.toLowerCase().includes(trimmedQuery);
     return matchEmail || matchId || matchName;
   });
@@ -111,13 +111,16 @@ export default function MyReservations() {
                 <span className={`status-badge status-${(b.status || 'pending').toLowerCase()}`}>
                   {b.status || 'Confirmed'}
                 </span>
-                <h3>{b.id}</h3>
+                <h3>{bookingLabel(b.id)}</h3>
                 <p>
                   <strong>{b.service || 'Simulator Session'}</strong><br />
-                  {dateLabel(b.date)} · {b.time} ({b.duration} {b.duration === 1 ? 'hour' : 'hours'})<br />
-                  Reserved: {b.resources?.join(', ') || 'Bay 1'}<br />
+                  {dateLabel(b.date)} · {formatTime(Number(b.time.slice(0, 2)))}–{formatTime(Number(b.time.slice(0, 2)) + Number(b.duration))} ({b.duration} {Number(b.duration) === 1 ? 'hour' : 'hours'})<br />
+                  {b.rental && <>{b.rental === 'half' ? 'Half day' : 'Whole day'} rental<br /></>}
+                  {b.price && <>Quoted total: {money(b.price.total)}<br /></>}
+                  Reserved: {b.resources?.map(bookingLabel).join(', ') || 'Bay 1'}<br />
                   Guest: {b.customer?.first} {b.customer?.last} · {b.customer?.attendees || 1} {b.customer?.attendees === 1 ? 'player' : 'players'}
                 </p>
+                {b.price && <details className="history-price"><summary>Price breakdown</summary><dl>{b.price.lines.map((line, i) => <div key={i}><dt>{line.label}</dt><dd>{money(line.amount)}</dd></div>)}</dl></details>}
               </div>
 
               <div className="history-actions">
